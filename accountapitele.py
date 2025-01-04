@@ -1,3 +1,4 @@
+import os
 import asyncio
 from flask import Flask, request, jsonify
 from flask_cors import CORS
@@ -6,6 +7,12 @@ from telethon.errors import SessionPasswordNeededError
 
 app = Flask(__name__)
 CORS(app)
+
+session_path = "/persistent/sessions"
+
+# Ensure the session directory exists
+if not os.path.exists(session_path):
+    os.makedirs(session_path)
 
 code_hash_store = {}
 
@@ -21,7 +28,7 @@ def connect_telegram():
 
     def run_telethon():
         async def connect_client():
-            client = TelegramClient(f"session_{phone_number}", api_id, api_hash)
+            client = TelegramClient(f"{session_path}/session_{phone_number}", api_id, api_hash)
 
             try:
                 await client.connect()
@@ -64,7 +71,7 @@ def verify_code():
 
     def run_telethon():
         async def verify_client():
-            client = TelegramClient(f"session_{phone_number}", api_id, api_hash)
+            client = TelegramClient(f"{session_path}/session_{phone_number}", api_id, api_hash)
 
             try:
                 await client.connect()
