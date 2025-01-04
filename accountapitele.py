@@ -113,17 +113,27 @@ def test_connection():
 
     def run_telethon():
         async def test_client():
-            client = TelegramClient(f"session_{phone_number}", api_id, api_hash)
+            session_file = f"{session_path}/session_{phone_number}"
+            print(f"Checking session file at: {session_file}")
+
+            # Check if session file exists
+            if not os.path.exists(session_file + ".session"):
+                print(f"Session file not found for phone number: {phone_number}")
+                return {"error": "Session file not found, please authenticate"}
+
+            client = TelegramClient(session_file, api_id, api_hash)
 
             try:
                 await client.connect()
 
-                # Fetch the logged-in user's profile
+                # Verify that the client is authenticated
+                if not await client.is_user_authorized():
+                    print("Client is not authorized")
+                    return {"error": "Client is not authorized, please re-authenticate"}
+
+                # Fetch user details and send a test message
                 me = await client.get_me()
-
-                # Send a test message to "Saved Messages"
-                message = await client.send_message("me", "This is a test message from your Telegram integration!")
-
+                message = await client.send_message("me", "This is a test message from your SaaS app!")
                 return {
                     "status": "connected",
                     "username": me.username,
